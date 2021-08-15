@@ -1,14 +1,18 @@
 {
-  "name": "file-sharer",
+  "name": "airshare",
   "version": "1.0.0",
   "description": "should share files on local network",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js $airshare", 
+    "develop": "nodemon app.js $airshare"
   },
-  "author": "",
+  "author": "Jack He Tech",
   "license": "MIT",
   "dependencies": {
+    "express": "^4.17.1",
+    "nodemon": "^2.0.12",
     "serve-handler": "^6.1.3"
   }
 }
