@@ -15,13 +15,30 @@
         }
     </style>
 
-    <div id="cp">
-        <h2> Control Plane: </h2>
-    </div>
-
+    <div id="controlplane"></div>
     
+    <div id="filesystem"></div>
+    
+    <script>
 
-    <div id="files"></div>
-    <script src="./controller.js"></script>
+        // should fail if response data is not a filesystem (text/html) and redirect user to the default browser handler
+        function renderFileSystem(path) {
+            fetch(path + "?type=files") 
+            .then(data => { 
+                const contentType = data.headers.get("content-type")
+                if (!contentType || contentType.indexOf("text/html") === -1) {
+                    window.location.href = path + "?type=files"; 
+                    return 
+                }
+                return data.text()
+            }) 
+            .then(html => { $("#filesystem").html(html) }) 
+            .catch(err => { alert(err) })
+        }
+        renderFileSystem(window.location.href)    
+
+        // render control plane 
+        
+    </script>
 </body> 
 </html> 
