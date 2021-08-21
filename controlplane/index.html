@@ -13,10 +13,28 @@
         h2 {
             font-size: 45px !important
         }
+
+
+        .hostDisplay {
+            margin: 0.2em 0.5em !important;
+            display: inline-block !important;
+        }
     </style>
 
-    <div id="controlplane"></div>
+    <div id="controlplane">
+        <h2> Control Plane </h2>
+         <div>
+            <input type="text" id="ipInput" placeholder="0.0.0.0 (LAN ip)"/>
+            <input type="text" id="metaDataInput" placeholder="name"/>
+            <input type="submit" id="add" value="add host">
+        </div>
+        <h3>Active Hosts</h3>
+        <div id="hostList"></div>
+        <input type="submit" id="update" value="update">
+    </div>
     
+    <hr>
+    <h2> File System </h2>
     <div id="filesystem"></div>
     
     <script>
@@ -27,18 +45,76 @@
             .then(data => { 
                 const contentType = data.headers.get("content-type")
                 if (!contentType || contentType.indexOf("text/html") === -1) {
-                    window.location.href = path + "?type=files"; 
-                    return 
+                    window.location.href = path + "?type=files";  
+                    throw new Error("content type not html");
+                } else {
+                    return data.text()
                 }
-                return data.text()
             }) 
-            .then(html => { $("#filesystem").html(html) }) 
-            .catch(err => { alert(err) })
+            .then(html => { 
+                if (!html.includes("<ul id=\"files\">")) {
+                    window.location.href = path + "?type=files"; 
+                    throw new Error("content type not a file system");
+                } else {
+                    $("#filesystem").html(html)
+                }
+            }) 
+            .catch(err => { console.log(err) })
         }
         renderFileSystem(window.location.href)    
 
         // render control plane 
         
+        // get data first 
+        // render data as a list of configurable cells in a table format
+        // Text <ip address>, Input <meta data>, Text <created at> 
+
+
+        function updateButtonListeners() {
+            // get all buttons
+            const buttons = document.getElementsByTagName("button");
+            for (const button of buttons) {
+                button.addEventListener("click", () => {
+                    // get button ID
+                    const id = parseInt(button.id[0]);
+                    
+                });
+            }
+        }
+
+        function generateWebsiteDiv(id, metadata, ipAddress) {
+            return ("<tr>" +
+                `<td style="width: 95%"><p class="hostDisplay" id=${id}></p>${ipAddress}</td>` +
+                `<td style="width: 25%"><input id="whitelisttime${id}" type="text" min="0" value=${metadata}></td>` +
+                `<td style="width: 5%"><button id=${id}>&times;</button></td>` +
+                "</tr>");
+        }
+
+      
+
+        function drawFilterListTable() {
+            
+            //fetch list of hosts from server
+            const hosts = [{"ip":"192.168.1.65:1000","metadata":"Jacks-Computer.local --- Darwin","creationDate":"2021-08-20T04:13:21.883Z"}]
+            // generating table
+            let table = '<table class="hover shadow styled">';
+            let cur_id = 0;
+            // appending row for each addiitonal blocked site
+            hosts.forEach((host) => {
+                table += generateWebsiteDiv(cur_id, host.metadata);
+                cur_id++;
+            });
+            table += "</table>";
+            // adds table to html
+            const hostList = document.getElementById("hostList");
+            if (hostList != null) {
+                hostList.innerHTML = table;
+            }
+            // sync browser javascript to acknowledge newly created elements
+            updateButtonListeners();
+        }
+
+
     </script>
 </body> 
 </html> 
