@@ -159,7 +159,7 @@
            // verify ip, adds new host to list of hosts & cache data in browser, call update
            let table = document.getElementById("hostList").innerHTML
            let ipInput = $("#ipInput").val()
-           let metaDataInput = $("#ipInput").val()
+           let metaDataInput = document.getElementById("metaDataInput").innerHTML
 
            fetch("http://" + ipInput + "/exist")
            .then((response) => response.text()) 
