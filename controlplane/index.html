@@ -97,6 +97,33 @@
             }
         }
 
+
+        function update() {
+            // get state of all inputs, updates every ip in current state with new state
+            
+        }
+
+        document.getElementById("add").addEventListener("click", () => {
+           // adds new host to list of hosts & cache data in browser
+           // call update
+           let table = document.getElementById("hostList").innerHTML
+           
+           // reverse table string
+           const arrayStrings = table.split("");
+           const reverseArray = arrayStrings.reverse();
+           const joinArray = reverseArray.join("");
+           
+           let index = joinArray.indexOf("atadatem")
+           let latestId = parseInt(joinArray[index - 1])
+           alert(latestId)
+           table = table.replace("</table>", "") 
+           table += generateWebsiteDiv("", "", "", "") 
+           update()
+        })
+
+     
+        document.getElementById("update").addEventListener("click", update)
+
         // fetch list of valid hosts from local server
         
         fetch("/node/data")
