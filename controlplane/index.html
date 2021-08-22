@@ -28,7 +28,7 @@
             <input type="text" id="metaDataInput" placeholder="name"/>
             <input type="submit" id="add" value="add host">
         </div>
-        <h3>Active Hosts</h3>
+        <h3>Active Hosts</h3> <p>Note: spaces in hostnames get truncated</p>
         <div id="hostList"></div>
         <br>
         <input type="submit" id="update" value="update">
@@ -75,8 +75,8 @@
         function generateWebsiteDiv(id, ipAddress, metadata, creationData) {
             return ("<tr>" +
                 `<td style="width: 75%"><input style="width: 250px" id="metadata${id}" type="text" value=${metadata}></td>` +
-                `<td style="width: 50%"><p class="hostDisplay" style="width: 25%" id="ip${id}"></p><b>ip: </b><a href="http://${ipAddress}">${ipAddress}</a></td>` +
-                `<td style="width: 50%"><p class="hostDisplay" id="date${id}" style="width: 400px"><b>date created: </b>${creationData}</p></td>` +
+                `<td style="width: 50%"><p class="hostDisplay" style="width: 25%"></p><b>ip: </b><a id="ip${id}" href="http://${ipAddress}">${ipAddress}</a></td>` +
+                `<td style="width: 50%"><p class="hostDisplay" style="width: 400px"><b>date created: </b><span id="date${id}">${creationData}</span></p></td>` +
                 "</tr>");
         }
 
@@ -97,28 +97,86 @@
             }
         }
 
-
-        function update() {
-            // get state of all inputs, updates every ip in current state with new state
-            
-        }
-
-        document.getElementById("add").addEventListener("click", () => {
-           // adds new host to list of hosts & cache data in browser
-           // call update
-           let table = document.getElementById("hostList").innerHTML
-           
-           // reverse table string
+        function getLatestId(table) {
+            // reverse table string
            const arrayStrings = table.split("");
            const reverseArray = arrayStrings.reverse();
            const joinArray = reverseArray.join("");
-           
+           // "atadatem" is the reverse of "metadata"
            let index = joinArray.indexOf("atadatem")
+           // get the char just before "atadatem" to retrieve the latest index :)
            let latestId = parseInt(joinArray[index - 1])
-           alert(latestId)
-           table = table.replace("</table>", "") 
-           table += generateWebsiteDiv("", "", "", "") 
-           update()
+           return latestId
+        }
+
+        function update() {
+            // get state of all inputs, updates every ip in current state with new state
+            let latestId = getLatestId(document.getElementById("hostList").innerHTML)
+            let ips = []
+            let nodes = []
+            for (let i = 0; i <= latestId; i++) {
+                let ip = document.getElementById("ip" + i).innerHTML
+                let metaData = $("#metadata" + i).val()
+                let creationData = document.getElementById("date" + i).innerHTML
+                ips.push(ip) 
+                nodes.push({
+                    "ip" : ip, 
+                    "metadata" : metaData, 
+                    "creationDate" : creationData
+                })
+            }
+
+            console.log("new nodes: " + JSON.stringify(nodes))
+
+            new Set(ips).forEach((ip) => {
+                fetch("http://" + ip + "/node/update", {
+                    method: 'POST', 
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    referrerPolicy: 'no-referrer', 
+                    body: JSON.stringify({ "nodes" : nodes }) 
+                })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("failed to update host (non 200 status): " + ip)
+                    }
+                    return response.text()
+                })
+                .then((data) => {
+                    if (data !== "success!") {
+                        throw new Error("failed to update host (misleading 200 status): " + ip)
+                    } 
+                    console.log("updated: " + ip)
+                })
+                .catch((err) => {
+                    alert(err)
+                })
+            })
+        }
+
+        document.getElementById("add").addEventListener("click", () => {
+           // verify ip, adds new host to list of hosts & cache data in browser, call update
+           let table = document.getElementById("hostList").innerHTML
+           let ipInput = $("#ipInput").val()
+           let metaDataInput = $("#ipInput").val()
+
+           fetch("http://" + ipInput + "/exist")
+           .then((response) => response.text()) 
+           .then((data) => {
+               if (data === "exists") {
+                    let latestId = getLatestId(table)           
+                    table = table.replace("</table>", "") 
+                    table += generateWebsiteDiv(latestId + 1, ipInput, metaDataInput, new Date())
+                    document.getElementById("hostList").innerHTML = table
+                    update()
+               } else {
+                   alert(ipInput + " is not a valid active host")
+               }
+           })
+           .catch((err) => {
+               alert("problem while validating " + ipInput + ", " + err)
+           })
         })
 
      

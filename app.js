@@ -60,14 +60,18 @@ app.post("/node/update", (req, res) => {
   let newNodes = req.body 
   // newNodes should be { "nodes" : [{...}, {...}] }
   try {
+    console.log(newNodes.nodes)
     if (newNodes.nodes.length) {
-      fs.writeFileSync("./var/nodes.json", newNodes)
+      fs.writeFileSync("./var/nodes.json", JSON.stringify(newNodes))
     } else {
       throw new Error("invalid number of nodes")
     }
   } catch (err) {
-    res.status(400).send(err)
+    console.log("error while trying to write to file: " + err)
+    return res.status(400).send(err)
   }
+
+  res.status(200).send("success!")
 })
 
 
