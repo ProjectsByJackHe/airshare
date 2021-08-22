@@ -9,6 +9,7 @@ const app = express()
 const fs = require('fs')
 const bodyParser = require('body-parser')
 const cors = require('cors')
+const axios = require('axios')
 const NodeCache = require("node-cache"); 
 const { exit } = require('process');
 // single key will be used to represent internal memory cache
@@ -35,7 +36,8 @@ try {
   const currentDate = new Date()
 
   // default metadata: hostname + os type (windows / mac / linux)
-  const defaultName = os.hostname() + " --- " + os.type()
+  const platform = os.type() === "Darwin" ? "MacOs" : os.type()
+  const defaultName = os.hostname() + "---" + platform
   fs.writeFileSync("./var/nodes.json", JSON.stringify({
     "nodes" : [{ "ip" : currentHostIp + ":" + port, "metadata" : defaultName, "creationDate": currentDate }]
   }))
@@ -69,22 +71,42 @@ app.post("/node/update", (req, res) => {
 })
 
 
-app.get("/node/data", (req, res) => {
+app.get("/node/data", async (req, res) => {
   try {
-    let nodes = myCache.get("nodes") 
-    if (!nodes) {
-      nodes = fs.readFileSync("./var/node.json") 
-      myCache.set("nodes", nodes) 
+    let hosts = myCache.get("nodes") 
+    if (!hosts) {
+      hosts = JSON.parse(fs.readFileSync("./var/nodes.json")) 
+      myCache.set("nodes", hosts) 
     }
 
-    res.json(JSON.stringify(nodes))
+    let validNodes = []
+    
+    for (let i = 0; i < hosts.nodes.length; i++) {
+      let node = hosts.nodes[i]
+      try {
+        let text = await axios.get("http://" + node.ip + "/exist")
+        if (text.data === "exists") { validNodes.push(node) }
+      } catch (err) {
+        console.log("host found offline: " + node + " AND failed to GET: " + err)
+        continue 
+      }
+    } 
+
+    // update nodes.json with list of still-online nodes
+    if (validNodes.length !== hosts.nodes.length && validNodes.length > 0) {
+      fs.writeFileSync("./var/nodes.json", { "nodes" : validNodes }) 
+      myCache.set("nodes", { "nodes" : validNodes })
+    }
+ 
+    res.json(JSON.stringify({ "nodes" : validNodes }))
   } catch (err) {
+    console.log("get /node/data: " + String(err))
     res.status(500).send("get /node/data: " + String(err)) 
   }
 })
 
 app.use(async (req, res, next) => {
-  if (req.query.type === "files") {
+  if (req.query.type) {
     return handler(req, res, {
       "public": sharepath 
     });

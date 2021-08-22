@@ -14,11 +14,11 @@
             font-size: 45px !important
         }
 
-
         .hostDisplay {
             margin: 0.2em 0.5em !important;
             display: inline-block !important;
         }
+       
     </style>
 
     <div id="controlplane">
@@ -30,6 +30,7 @@
         </div>
         <h3>Active Hosts</h3>
         <div id="hostList"></div>
+        <br>
         <input type="submit" id="update" value="update">
     </div>
     
@@ -61,47 +62,31 @@
             }) 
             .catch(err => { console.log(err) })
         }
-        renderFileSystem(window.location.href)    
-
-        // render control plane 
-        
+    
         // get data first 
         // render data as a list of configurable cells in a table format
         // Text <ip address>, Input <meta data>, Text <created at> 
+    
 
+        // render control plane 
+        renderFileSystem(window.location.href)    
+    
 
-        function updateButtonListeners() {
-            // get all buttons
-            const buttons = document.getElementsByTagName("button");
-            for (const button of buttons) {
-                button.addEventListener("click", () => {
-                    // get button ID
-                    const id = parseInt(button.id[0]);
-                    
-                });
-            }
-        }
-
-        function generateWebsiteDiv(id, metadata, ipAddress) {
+        function generateWebsiteDiv(id, ipAddress, metadata, creationData) {
             return ("<tr>" +
-                `<td style="width: 95%"><p class="hostDisplay" id=${id}></p>${ipAddress}</td>` +
-                `<td style="width: 25%"><input id="whitelisttime${id}" type="text" min="0" value=${metadata}></td>` +
-                `<td style="width: 5%"><button id=${id}>&times;</button></td>` +
+                `<td style="width: 75%"><input style="width: 250px" id="metadata${id}" type="text" value=${metadata}></td>` +
+                `<td style="width: 50%"><p class="hostDisplay" style="width: 25%" id="ip${id}"></p><b>ip: </b><a href="http://${ipAddress}">${ipAddress}</a></td>` +
+                `<td style="width: 50%"><p class="hostDisplay" id="date${id}" style="width: 400px"><b>date created: </b>${creationData}</p></td>` +
                 "</tr>");
         }
 
-      
-
-        function drawFilterListTable() {
-            
-            //fetch list of hosts from server
-            const hosts = [{"ip":"192.168.1.65:1000","metadata":"Jacks-Computer.local --- Darwin","creationDate":"2021-08-20T04:13:21.883Z"}]
+        function drawFilterListTable(hosts) {
             // generating table
             let table = '<table class="hover shadow styled">';
             let cur_id = 0;
             // appending row for each addiitonal blocked site
             hosts.forEach((host) => {
-                table += generateWebsiteDiv(cur_id, host.metadata);
+                table += generateWebsiteDiv(cur_id, host.ip, host.metadata, host.creationDate);
                 cur_id++;
             });
             table += "</table>";
@@ -110,11 +95,17 @@
             if (hostList != null) {
                 hostList.innerHTML = table;
             }
-            // sync browser javascript to acknowledge newly created elements
-            updateButtonListeners();
         }
 
-
+        // fetch list of valid hosts from local server
+        
+        fetch("/node/data")
+        .then((response) => response.json())
+        .then((data) => drawFilterListTable(JSON.parse(data).nodes)) 
+        .catch((err) => alert("failed GET /node/data: " + err)) 
+        /*
+        */
+        
     </script>
 </body> 
 </html> 
