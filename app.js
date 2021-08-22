@@ -15,7 +15,7 @@ const { exit } = require('process');
 // single key will be used to represent internal memory cache
 // key: "nodes", value: JSON
 const myCache = new NodeCache() 
-
+let hostIp;
 // utility functions 
 const interfaces = os.networkInterfaces();
 const getNetworkAddress = () => {
@@ -32,14 +32,14 @@ const getNetworkAddress = () => {
 
 try {
   // initialize node.json as current node since we don't know the state of all other hosts on the network yet. 
-  const currentHostIp = String(getNetworkAddress()); 
+  hostIp = String(getNetworkAddress()); 
   const currentDate = new Date()
 
   // default metadata: hostname + os type (windows / mac / linux)
   const platform = os.type() === "Darwin" ? "MacOs" : os.type()
   const defaultName = os.hostname() + "---" + platform
   fs.writeFileSync("./var/nodes.json", JSON.stringify({
-    "nodes" : [{ "ip" : currentHostIp + ":" + port, "metadata" : defaultName, "creationDate": currentDate }]
+    "nodes" : [{ "ip" : hostIp + ":" + port, "metadata" : defaultName, "creationDate": currentDate }]
   }))
 
 } catch (err) {
@@ -123,5 +123,5 @@ app.use((req, res) => {
 })
 
 app.listen(port, '0.0.0.0', () => {
-  console.log('Running at http://localhost:' + String(port));
+  console.log('Running at http://localhost:' + String(port) + ", on your network: http://" + String(hostIp) + ":" + String(port));
 });
