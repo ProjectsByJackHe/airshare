@@ -24,7 +24,7 @@
     <div id="controlplane">
         <h2> Control Plane </h2>
          <div>
-            <input type="text" id="ipInput" placeholder="0.0.0.0 (LAN ip)"/>
+            <input type="text" id="ipInput" placeholder="<LAN ip> : <port #>"/>
             <input type="text" id="metaDataInput" placeholder="name"/>
             <input type="submit" id="add" value="add host">
         </div>
@@ -159,8 +159,7 @@
            // verify ip, adds new host to list of hosts & cache data in browser, call update
            let table = document.getElementById("hostList").innerHTML
            let ipInput = $("#ipInput").val()
-           let metaDataInput = document.getElementById("metaDataInput").innerHTML
-
+           let metaDataInput = $("#metaDataInput").val()
            fetch("http://" + ipInput + "/exist")
            .then((response) => response.text()) 
            .then((data) => {
