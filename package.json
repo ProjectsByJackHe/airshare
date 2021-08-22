@@ -5,8 +5,8 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "airshare": "node app.js $airshare",
-    "develop": "nodemon --ignore var app.js $airshare"
+    "airshare": "node app.js",
+    "develop": "nodemon --ignore var app.js"
   },
   "author": "Jack He Tech",
   "license": "MIT",
